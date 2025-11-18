@@ -1,70 +1,19 @@
-import React, { ReactNode } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+// src/App.tsx
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthPage } from "./routes/AuthPage";
 import { DashboardPage } from "./routes/DashboardPage";
-import { useAuth } from "./context/AuthContext";
-
-function PrivateRoute({ children }: { children: ReactNode }) {
-    const { user, isLoading } = useAuth();
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-50">
-                <p className="text-sm text-slate-400">Loading...</p>
-            </div>
-        );
-    }
-
-    if (!user) {
-        return <Navigate to="/auth" replace />;
-    }
-
-    return children;
-}
-
-function PublicRoute({ children }: { children: ReactNode }) {
-    const { user, isLoading } = useAuth();
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-50">
-                <p className="text-sm text-slate-400">Loading...</p>
-            </div>
-        );
-    }
-
-    if (user) {
-        return <Navigate to="/dashboard" replace />;
-    }
-
-    return children;
-}
 
 function App() {
     return (
-        <>
+        <BrowserRouter>
             <Routes>
-                <Route
-                    path="/auth"
-                    element={
-                        <PublicRoute>
-                            <AuthPage />
-                        </PublicRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard"
-                    element={
-                        <PrivateRoute>
-                            <DashboardPage />
-                        </PrivateRoute>
-                    }
-                />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                {/* default route */}
                 <Route path="*" element={<Navigate to="/auth" replace />} />
             </Routes>
-            <Toaster position="top-right" />
-        </>
+        </BrowserRouter>
     );
 }
 
