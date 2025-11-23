@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
-body {
-    @apply bg-slate-950 text-slate-50;
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    font-family: "Kumbh Sans", system-ui, sans-serif;
 }

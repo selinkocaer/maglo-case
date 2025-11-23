@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 type User = {
     id: string;
@@ -6,48 +6,41 @@ type User = {
     email: string;
 };
 
-type AuthContextValue = {
+type AuthContextType = {
     user: User | null;
-    isLoading: boolean;
-    signIn: (user: User) => void;
-    signOut: () => void;
+    isAuthenticated: boolean;
+    login: (user: User, token: string) => void;
+    logout: () => void;
 };
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const stored = localStorage.getItem("maglo_user");
+        const stored = localStorage.getItem("maglo_auth");
         if (stored) {
-            try {
-                setUser(JSON.parse(stored));
-            } catch {
-                localStorage.removeItem("maglo_user");
-            }
+            const parsed = JSON.parse(stored);
+            setUser(parsed.user);
         }
-        setIsLoading(false);
     }, []);
 
-    const signIn = (u: User) => {
-        setUser(u);
-        localStorage.setItem("maglo_user", JSON.stringify(u));
+    const login = (userData: User, token: string) => {
+        setUser(userData);
+        localStorage.setItem("maglo_auth", JSON.stringify({ user: userData, token }));
     };
 
-    const signOut = () => {
+    const logout = () => {
         setUser(null);
-        localStorage.removeItem("maglo_user");
+        localStorage.removeItem("maglo_auth");
     };
 
-    return <AuthContext.Provider value={{ user, isLoading, signIn, signOut }}>{children}</AuthContext.Provider>;
-}
+    return <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>{children}</AuthContext.Provider>;
+};
 
-export function useAuth() {
+export const useAuth = () => {
     const ctx = useContext(AuthContext);
-    if (!ctx) {
-        throw new Error("useAuth must be used within AuthProvider");
-    }
+    if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
     return ctx;
-}
+};
