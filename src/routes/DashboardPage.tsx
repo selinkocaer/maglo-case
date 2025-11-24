@@ -15,13 +15,15 @@ export const DashboardPage: React.FC = () => {
             <main className="flex-1 min-h-screen bg-[#FFFFFF] pt-[30px] pr-[40px] pb-[40px] pl-[40px]">
                 <DashboardTopBar />
 
-                <div className="mt-[30px] flex gap-[30px]">
+                <div className="mt-[30px] flex gap-[30px] w-full">
+                    {/* SOL KOLON -> 717px */}
                     <div className="w-[717px] flex flex-col gap-[30px]">
                         <SummaryCardsRow />
                         <WorkingCapitalCard />
                         <RecentTransactionsCard />
                     </div>
 
+                    {/* SAĞ KOLON -> 354px */}
                     <div className="w-[354px] flex flex-col gap-[30px]">
                         <WalletSection />
                         <ScheduledTransfersSection />

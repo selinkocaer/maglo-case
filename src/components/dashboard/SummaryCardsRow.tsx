@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardSummary, FinancialSummary } from "../../lib/api";
+import { BalanceCard } from "./BalanceCard";
 
 const formatAmount = (amount?: number, currency?: string) => {
     if (typeof amount !== "number") return "--";
@@ -28,10 +29,12 @@ export const SummaryCardsRow: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="w-[716px] h-[105px] flex gap-[25px]">
-                {[1, 2, 3].map((i) => (
-                    <div key={i} className="w-[222px] h-[105px] rounded-[10px] bg-[#F3F4F6] animate-pulse" />
-                ))}
+            <div className="flex gap-[25px]">
+                <BalanceCard icon="balance" title="Total balance" amount={formatAmount(totalBalance?.amount, totalBalance?.currency)} dark />
+
+                <BalanceCard icon="spending" title="Total spending" amount={formatAmount(totalExpense?.amount, totalExpense?.currency)} />
+
+                <BalanceCard icon="saved" title="Total saved" amount={formatAmount(totalSavings?.amount, totalSavings?.currency)} />
             </div>
         );
     }
@@ -39,7 +42,8 @@ export const SummaryCardsRow: React.FC = () => {
     const showError = isError || !data;
 
     return (
-        <div className="w-[716px] h-[105px] flex gap-[25px]">
+        <div className="w-full h-[105px] flex gap-[25px]">
+            {" "}
             <div
                 className="
                     w-[222px] h-[105px]
@@ -63,7 +67,7 @@ export const SummaryCardsRow: React.FC = () => {
                         Total balance
                     </span>
                     <span
-                        className="text-[24px] font-bold leading-[1]"
+                        className="text-[18px] font-bold leading-[1]"
                         style={{
                             fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                             color: "#FFFFFF",
@@ -75,7 +79,6 @@ export const SummaryCardsRow: React.FC = () => {
                     {showError && <span className="text-[11px] text-red-400 leading-none">summary error</span>}
                 </div>
             </div>
-
             <div
                 className="
                     w-[222px] h-[105px]
@@ -99,7 +102,7 @@ export const SummaryCardsRow: React.FC = () => {
                         Total spending
                     </span>
                     <span
-                        className="text-[24px] font-bold leading-[1]"
+                        className="text-[18px] font-bold leading-[1]"
                         style={{
                             fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                             color: "#1B212D",
@@ -111,7 +114,6 @@ export const SummaryCardsRow: React.FC = () => {
                     {showError && <span className="text-[11px] text-red-400 leading-none">summary error</span>}
                 </div>
             </div>
-
             <div
                 className="
                     w-[222px] h-[105px]
@@ -135,7 +137,7 @@ export const SummaryCardsRow: React.FC = () => {
                         Total saved
                     </span>
                     <span
-                        className="text-[24px] font-bold leading-[1]"
+                        className="text-[18px] font-bold leading-[1]"
                         style={{
                             fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                             color: "#1B212D",

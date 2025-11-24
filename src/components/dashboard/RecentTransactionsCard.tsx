@@ -40,7 +40,7 @@ export const RecentTransactionsCard: React.FC = () => {
     return (
         <div
             className="
-                w-[717px] h-[293px]
+                w-full h-[293px]
                 rounded-[10px]
                 bg-[#FFFFFF]
                 border border-[#F5F5F5]

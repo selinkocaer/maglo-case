@@ -39,8 +39,7 @@ export const ScheduledTransfersSection: React.FC = () => {
     return (
         <div
             className="
-                w-[354px] 
-                rounded-[10px] 
+              w-full rounded-[10px]
                 bg-white 
                 border border-[#F5F5F5]
                 px-[20px] pt-[20px] pb-[10px]

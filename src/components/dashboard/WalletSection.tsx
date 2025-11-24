@@ -52,7 +52,7 @@ export const WalletSection: React.FC = () => {
     const card2Currency = getCurrency(card2);
 
     return (
-        <div className="w-[354px] h-[359px] flex flex-col">
+        <div className="w-full h-[359px] flex flex-col">
             <div className="w-[354px] h-[22px] flex items-center justify-between mb-[15px]">
                 <h2
                     className="text-[18px] font-semibold leading-[1]"
