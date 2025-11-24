@@ -16,14 +16,12 @@ export const DashboardPage: React.FC = () => {
                 <DashboardTopBar />
 
                 <div className="mt-[30px] flex gap-[30px] w-full">
-                    {/* SOL KOLON -> 717px */}
                     <div className="w-[717px] flex flex-col gap-[30px]">
                         <SummaryCardsRow />
                         <WorkingCapitalCard />
                         <RecentTransactionsCard />
                     </div>
 
-                    {/* SAĞ KOLON -> 354px */}
                     <div className="w-[354px] flex flex-col gap-[30px]">
                         <WalletSection />
                         <ScheduledTransfersSection />

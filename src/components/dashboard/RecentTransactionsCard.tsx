@@ -35,7 +35,7 @@ export const RecentTransactionsCard: React.FC = () => {
     });
 
     const transactions = data?.transactions ?? [];
-    const top3 = transactions.slice(0, 3);
+    const top4 = transactions.slice(0, 4);
 
     return (
         <div
@@ -139,7 +139,7 @@ export const RecentTransactionsCard: React.FC = () => {
                 )}
 
                 {!isLoading &&
-                    top3.map((tx) => (
+                    top4.map((tx) => (
                         <div key={tx.id} className="w-[660px] h-[53px] border border-[#F5F5F5] rounded-[6px] flex flex-col">
                             <div className="w-[633px] h-[40px] flex items-center justify-between mx-[13.5px] mt-[6px]">
                                 <div className="w-[260px] h-[40px] flex items-center gap-[14px]">
@@ -213,7 +213,7 @@ export const RecentTransactionsCard: React.FC = () => {
                         </div>
                     ))}
 
-                {!isLoading && top3.length === 0 && <div className="text-[12px] text-[#9CA3AF] mt-2">No recent transactions.</div>}
+                {!isLoading && top4.length === 0 && <div className="text-[12px] text-[#9CA3AF] mt-2">No recent transactions.</div>}
             </div>
         </div>
     );

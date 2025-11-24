@@ -5,6 +5,29 @@ import { toast } from "react-toastify";
 import { loginUser, registerUser } from "../lib/api";
 
 type AuthMode = "signin" | "signup";
+type ErrorKey = "fullName" | "email" | "password" | "confirmPassword" | "form";
+
+type ErrorState = Partial<Record<ErrorKey, string>>;
+
+interface FormFieldProps {
+    label: string;
+    error?: string;
+    children: React.ReactNode;
+}
+
+const FormField: React.FC<FormFieldProps> = ({ label, error, children }) => {
+    return (
+        <div className="w-[404px] flex flex-col gap-[6px] mb-[8px]">
+            <label className="text-[14px] font-medium text-[#1B212D]" style={{ fontFamily: '"Kumbh Sans", system-ui, sans-serif' }}>
+                {label}
+            </label>
+
+            {children}
+
+            {error && <p className="text-[12px] text-[#EF4444] mt-[4px] leading-[1.2]">{error}</p>}
+        </div>
+    );
+};
 
 export const AuthPage: React.FC = () => {
     const [mode, setMode] = useState<AuthMode>("signin");
@@ -15,7 +38,7 @@ export const AuthPage: React.FC = () => {
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [errors, setErrors] = useState<ErrorState>({});
 
     const navigate = useNavigate();
     const isSignIn = mode === "signin";
@@ -30,28 +53,30 @@ export const AuthPage: React.FC = () => {
     }, [navigate]);
 
     const validate = () => {
-        const next: Record<string, string> = {};
+        const next: ErrorState = {};
 
         if (!email.trim()) {
             next.email = "Email is required.";
         } else {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) next.email = "Please enter a valid email.";
+            if (!emailRegex.test(email)) {
+                next.email = "Please enter a valid email.";
+            }
         }
 
         if (!password.trim()) {
             next.password = "Password is required.";
-        } else {
-            if (!isSignIn) {
-                const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
-                if (!passwordRegex.test(password)) {
-                    next.password = "Password must be at least 8 characters and include uppercase, lowercase, number and special character.";
-                }
+        } else if (!isSignIn) {
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                next.password = "Password must be at least 8 characters and include uppercase, lowercase, number and special character.";
             }
         }
 
         if (!isSignIn) {
-            if (!fullName.trim()) next.fullName = "Full name is required.";
+            if (!fullName.trim()) {
+                next.fullName = "Full name is required.";
+            }
 
             if (!confirmPassword.trim()) {
                 next.confirmPassword = "Please confirm your password.";
@@ -66,6 +91,12 @@ export const AuthPage: React.FC = () => {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+
+        setErrors((prev) => {
+            const { form, ...rest } = prev;
+            return rest;
+        });
+
         if (!validate()) {
             toast.error("Please fix the form errors.");
             return;
@@ -76,28 +107,30 @@ export const AuthPage: React.FC = () => {
 
             if (isSignIn) {
                 const res = await loginUser({ email, password });
-
                 toast.success(res.message || "Sign in successful");
                 navigate("/dashboard", { replace: true });
             } else {
-                await registerUser({ fullName, email, password });
+                const registerRes = await registerUser({ fullName, email, password });
                 await loginUser({ email, password });
 
-                toast.success("Account created successfully");
+                toast.success(registerRes?.message || "Account created successfully");
                 navigate("/dashboard", { replace: true });
             }
         } catch (err: any) {
             console.error(err);
             const msg = err?.message || "Something went wrong. Please check your information and try again.";
+
             toast.error(msg);
+            setErrors((prev) => ({
+                ...prev,
+                form: msg,
+            }));
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const inputClass = "w-[404px] h-[48px] rounded-[10px] border border-[#F5F5F5] " + "pt-[15px] pr-[25px] pb-[16px] pl-[20px] " + "bg-[#F9FAFB] text-[14px] text-[#1B212D] " + "outline-none placeholder:text-[#9CA3AF] focus:border-[#111827]";
-
-    const labelClass = "w-[67px] h-[17px] text-[14px] font-medium leading-[1] text-[#1B212D]";
 
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-[#E6E8EE]">
@@ -109,6 +142,7 @@ export const AuthPage: React.FC = () => {
                 <div className="flex-1 flex">
                     <div className="mt-[120px] pl-[135px] pr-[32px]">
                         <div className="w-[404px] flex flex-col justify-between space-y-[25px]" style={{ height: isSignIn ? 445 : "auto" }}>
+                            {/* Başlık */}
                             <div className="w-[299px] h-[65px] flex flex-col gap-[8px]">
                                 <h1
                                     className="h-[37px] text-[30px] font-semibold leading-[1] text-[#1B212D]"
@@ -132,86 +166,41 @@ export const AuthPage: React.FC = () => {
 
                             <form onSubmit={handleSubmit} className="w-[404px] flex flex-col gap-[25px]">
                                 {isSignIn ? (
-                                    <div className="w-[404px] h-[175px] flex flex-col gap-[20px]">
-                                        <div className="w-[404px] h-[85px] flex flex-col gap-[5px]">
-                                            <span
-                                                className={labelClass}
-                                                style={{
-                                                    fontFamily: '"Kumbh Sans", system-ui, sans-serif',
-                                                }}
-                                            >
-                                                Email
-                                            </span>
+                                    <div className="w-[404px] flex flex-col gap-[20px]">
+                                        <FormField label="Email" error={errors.email}>
                                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="example@gmail.com" disabled={isSubmitting} autoComplete="email" />
-                                            {errors.email && <p className="text-[12px] text-[#EF4444] leading-none">{errors.email}</p>}
-                                        </div>
+                                        </FormField>
 
-                                        <div className="w-[404px] h-[85px] flex flex-col gap-[5px]">
-                                            <span
-                                                className={labelClass}
-                                                style={{
-                                                    fontFamily: '"Kumbh Sans", system-ui, sans-serif',
-                                                }}
-                                            >
-                                                Password
-                                            </span>
+                                        <FormField label="Password" error={errors.password}>
                                             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="••••••••" disabled={isSubmitting} autoComplete="current-password" />
-                                            {errors.password && <p className="text-[12px] text-[#EF4444] leading-none">{errors.password}</p>}
-                                        </div>
+                                        </FormField>
                                     </div>
                                 ) : (
                                     <div className="w-[404px] flex flex-col gap-[20px]">
-                                        <div className="w-[404px] h-[85px] flex flex-col gap-[10px]">
-                                            <span
-                                                className={labelClass}
-                                                style={{
-                                                    fontFamily: '"Kumbh Sans", system-ui, sans-serif',
-                                                }}
-                                            >
-                                                Full name
-                                            </span>
+                                        <FormField label="Full name" error={errors.fullName}>
                                             <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} placeholder="John Doe" disabled={isSubmitting} />
-                                            {errors.fullName && <p className="text-[12px] text-[#EF4444] leading-none">{errors.fullName}</p>}
-                                        </div>
+                                        </FormField>
 
-                                        <div className="w-[404px] h-[85px] flex flex-col gap-[10px]">
-                                            <span
-                                                className={labelClass}
-                                                style={{
-                                                    fontFamily: '"Kumbh Sans", system-ui, sans-serif',
-                                                }}
-                                            >
-                                                Email
-                                            </span>
+                                        <FormField label="Email" error={errors.email}>
                                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="example@gmail.com" disabled={isSubmitting} autoComplete="email" />
-                                            {errors.email && <p className="text-[12px] text-[#EF4444] leading-none">{errors.email}</p>}
-                                        </div>
+                                        </FormField>
 
-                                        <div className="w-[404px] h-[85px] flex flex-col gap-[10px]">
-                                            <span
-                                                className={labelClass}
-                                                style={{
-                                                    fontFamily: '"Kumbh Sans", system-ui, sans-serif',
-                                                }}
-                                            >
-                                                Password
-                                            </span>
-                                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="••••••••" disabled={isSubmitting} autoComplete="new-password" />
-                                            {errors.password ? <p className="text-[12px] text-[#EF4444] leading-none">{errors.password}</p> : <p className="text-[12px] text-[#9CA3AF] leading-none">Password must be at least 8 characters and include uppercase, lowercase, number and special character.</p>}
-                                        </div>
+                                        <FormField label="Password" error={errors.password}>
+                                            <>
+                                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="••••••••" disabled={isSubmitting} autoComplete="new-password" />
+                                                {!errors.password && <p className="text-[12px] text-[#9CA3AF] leading-[1.2] mt-[4px]">Password must be at least 8 characters and include uppercase, lowercase, number and special character.</p>}
+                                            </>
+                                        </FormField>
 
-                                        <div className="w-[404px] h-[85px] flex flex-col gap-[10px]">
-                                            <span
-                                                className={labelClass}
-                                                style={{
-                                                    fontFamily: '"Kumbh Sans", system-ui, sans-serif',
-                                                }}
-                                            >
-                                                Confirm password
-                                            </span>
+                                        <FormField label="Confirm password" error={errors.confirmPassword}>
                                             <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClass} placeholder="••••••••" disabled={isSubmitting} autoComplete="new-password" />
-                                            {errors.confirmPassword && <p className="text-[12px] text-[#EF4444] leading-none">{errors.confirmPassword}</p>}
-                                        </div>
+                                        </FormField>
+                                    </div>
+                                )}
+
+                                {errors.form && (
+                                    <div className="w-[404px]">
+                                        <p className="text-[13px] text-[#EF4444] leading-snug">{errors.form}</p>
                                     </div>
                                 )}
 
