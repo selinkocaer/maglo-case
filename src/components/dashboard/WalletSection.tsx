@@ -1,25 +1,38 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchWallet, Wallet, WalletCard } from "../../lib/api";
+import { fetchWallet, Wallet } from "../../lib/api";
 
-const getLast4 = (card?: WalletCard) => {
-    if (!card) return "0000";
-    if (card.cardNumber) {
-        const digits = card.cardNumber.replace(/\s+/g, "");
-        return digits.slice(-4) || "0000";
-    }
-    return "0000";
+type WalletCard = Wallet["cards"][number];
+
+const getBalanceNumber = (card?: WalletCard): number => {
+    if (!card) return 0;
+
+    const anyCard = card as any;
+    if (typeof card.balance === "number") return card.balance;
+    if (typeof anyCard.availableBalance === "number") return anyCard.availableBalance;
+    if (typeof anyCard.amount === "number") return anyCard.amount;
+
+    return 0;
 };
 
 const getCurrency = (card?: WalletCard): string => {
-    // API'de şimdilik yok, TRY’de bırakıyoruz
-    return card?.currency || "TRY";
+    if (!card) return "TRY";
+    const anyCard = card as any;
+    return card.currency || anyCard.curr || "TRY";
 };
 
-const getBalanceNumber = (card?: WalletCard): number => {
-    // API’de balance yok -> 0 gösterelim (Figma’da da 0)
-    if (!card || typeof card.balance !== "number") return 0;
-    return card.balance;
+const getLast4 = (card?: WalletCard): string => {
+    if (!card) return "0000";
+    const digits = (card.cardNumber || "").replace(/\D/g, "");
+    const last4 = digits.slice(-4);
+    return last4 || "0000";
+};
+
+const getExpiry = (card?: WalletCard): string => {
+    if (!card) return "--/--";
+    const mm = String(card.expiryMonth ?? "").padStart(2, "0");
+    const yy = card.expiryYear ? String(card.expiryYear).slice(-2) : "--";
+    return `${mm}/${yy}`;
 };
 
 export const WalletSection: React.FC = () => {
@@ -34,11 +47,9 @@ export const WalletSection: React.FC = () => {
 
     const card1Balance = getBalanceNumber(card1);
     const card1Currency = getCurrency(card1);
-    const card1Last4 = getLast4(card1);
 
     const card2Balance = getBalanceNumber(card2);
     const card2Currency = getCurrency(card2);
-    const card2Last4 = getLast4(card2);
 
     return (
         <div className="w-[354px] h-[359px] flex flex-col">
@@ -74,7 +85,7 @@ export const WalletSection: React.FC = () => {
 
                         <div className="absolute left-0 top-[37px] w-[354px] h-[210px] rounded-[15px] px-[30px] pt-[55px] pb-[32px]">
                             <div className="w-[293px] h-[80px] flex justify-between">
-                                <div className="w-[165px] h-[80px] flex flex-col gap-[8px]">
+                                <div className="w-[200px] h-[80px] flex flex-col gap-[8px]">
                                     <span
                                         style={{
                                             width: 58,
@@ -95,7 +106,6 @@ export const WalletSection: React.FC = () => {
                                         <div className="w-[1px] h-[20px] bg-[#626261]" />
                                         <span
                                             style={{
-                                                width: 160,
                                                 fontFamily: "Gordita",
                                                 fontWeight: 500,
                                                 fontSize: 12,
@@ -121,7 +131,7 @@ export const WalletSection: React.FC = () => {
                                             color: "#FFFFFF",
                                         }}
                                     >
-                                        {card1.cardNumber || `**** **** **** ${card1Last4}`}
+                                        **** **** **** {getLast4(card1)}
                                     </span>
                                     <span
                                         style={{
@@ -132,7 +142,7 @@ export const WalletSection: React.FC = () => {
                                             color: "#868685",
                                         }}
                                     >
-                                        Exp: {card1.expiryMonth.toString().padStart(2, "0")}/{card1.expiryYear.toString().slice(-2)}
+                                        Exp: {getExpiry(card1)}
                                     </span>
                                 </div>
 
@@ -152,7 +162,7 @@ export const WalletSection: React.FC = () => {
                                             fontFamily: "Gordita",
                                             fontWeight: 500,
                                             fontSize: 12,
-                                            color: "#F9FAFB",
+                                            color: "#868685",
                                         }}
                                     >
                                         Available balance
@@ -229,7 +239,7 @@ export const WalletSection: React.FC = () => {
                                         color: "#1B212D",
                                     }}
                                 >
-                                    {card2.cardNumber || `**** **** **** ${card2Last4}`}
+                                    **** **** **** {getLast4(card2)}
                                 </span>
                             </div>
 
@@ -243,7 +253,7 @@ export const WalletSection: React.FC = () => {
                                         color: "#929EAE",
                                     }}
                                 >
-                                    Available balance
+                                    Exp: {getExpiry(card2)}
                                 </span>
                                 <span
                                     style={{

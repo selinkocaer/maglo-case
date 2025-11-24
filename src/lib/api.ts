@@ -160,13 +160,15 @@ export interface FinancialSummary {
 
 export interface WorkingCapitalPoint {
     month: string;
-    value: number;
+    income: number;
+    expense: number;
+    net: number;
 }
 
 export interface WorkingCapitalSummary {
-    currentAssets: number;
-    currentLiabilities: number;
-    workingCapital: number;
+    totalIncome: number;
+    totalExpense: number;
+    netBalance: number;
 }
 
 export interface WorkingCapital {
@@ -178,14 +180,14 @@ export interface WorkingCapital {
 
 export interface WalletCard {
     id: string;
-    name: string;
     bank: string;
+    name: string;
     type: string;
     cardNumber: string;
-    network: string;
     color: string;
     expiryMonth: number;
     expiryYear: number;
+    network: string;
     isDefault: boolean;
 
     balance?: number;
@@ -198,11 +200,15 @@ export interface Wallet {
 
 export interface RecentTransaction {
     id: string;
-    date: string;
-    description: string;
+
+    name: string;
+    business: string;
+    image: string;
+    type: string;
     amount: number;
     currency: string;
-    type: "income" | "expense";
+    date: string;
+    direction: "income" | "expense";
 }
 
 export interface RecentTransactionsSummary {
@@ -217,16 +223,17 @@ export interface RecentTransactions {
 
 export interface ScheduledTransfer {
     id: string;
+    name: string;
+    image: string;
     date: string;
-    from: string;
-    to: string;
     amount: number;
     currency: string;
     status: string;
 }
 
 export interface ScheduledTransfersSummary {
-    nextTransferDate: string | null;
+    count: number;
+    totalScheduledAmount: number;
 }
 
 export interface ScheduledTransfers {

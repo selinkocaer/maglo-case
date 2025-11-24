@@ -5,37 +5,27 @@ import { fetchRecentTransactions, RecentTransactions, RecentTransaction } from "
 const formatDate = (iso: string) => {
     if (!iso) return "-";
     const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "-";
-
     return d.toLocaleDateString("en-US", {
-        month: "short",
         day: "2-digit",
+        month: "short",
         year: "numeric",
     });
 };
 
-const formatAmount = (tx: RecentTransaction) => {
-    const sign = tx.type === "income" ? "+" : "-";
-    const currency = tx.currency || "TRY";
-    const value = Math.abs(tx.amount ?? 0);
-
-    const formatted = value.toLocaleString("tr-TR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-
-    return `${sign}${currency} ${formatted}`;
+const getFlow = (tx: RecentTransaction) => {
+    const dir = (tx.direction || "expense").toLowerCase();
+    return dir === "income" ? "income" : "expense";
 };
 
-const getTxIcon = (tx: RecentTransaction): string => {
-    const desc = tx.description?.toLowerCase() || "";
+const formatAmount = (tx: RecentTransaction) => {
+    const flow = getFlow(tx);
+    const sign = flow === "income" ? "+" : "-";
+    const value = Math.abs(tx.amount || 0);
 
-    if (desc.includes("iphone")) return "/icons/iphone.png";
-    if (desc.includes("netflix")) return "/icons/netflix.png";
-    if (desc.includes("figma")) return "/icons/figma.png";
-
-    // fallback – sidebar’daki transactions ikonunu kullan
-    return "/icons/transactions.png";
+    return `${sign}${value.toLocaleString("tr-TR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })} ${tx.currency || "TRY"}`;
 };
 
 export const RecentTransactionsCard: React.FC = () => {
@@ -45,8 +35,7 @@ export const RecentTransactionsCard: React.FC = () => {
     });
 
     const transactions = data?.transactions ?? [];
-
-    const visibleTx = transactions.slice(0, 3);
+    const top3 = transactions.slice(0, 3);
 
     return (
         <div
@@ -81,7 +70,7 @@ export const RecentTransactionsCard: React.FC = () => {
                             fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                             fontWeight: 600,
                             color: "#29A073",
-                            textAlign: "right" as const,
+                            textAlign: "right",
                         }}
                     >
                         View All
@@ -107,7 +96,7 @@ export const RecentTransactionsCard: React.FC = () => {
                     <span
                         className="text-[12px] leading-[1]"
                         style={{
-                            width: 31,
+                            width: 60,
                             fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                             fontWeight: 600,
                             color: "#929EAE",
@@ -118,7 +107,7 @@ export const RecentTransactionsCard: React.FC = () => {
                     <span
                         className="text-[12px] leading-[1]"
                         style={{
-                            width: 56,
+                            width: 70,
                             fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                             fontWeight: 600,
                             color: "#929EAE",
@@ -129,7 +118,7 @@ export const RecentTransactionsCard: React.FC = () => {
                     <span
                         className="text-[12px] leading-[1]"
                         style={{
-                            width: 32,
+                            width: 90,
                             fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                             fontWeight: 600,
                             color: "#929EAE",
@@ -143,20 +132,21 @@ export const RecentTransactionsCard: React.FC = () => {
             <div className="w-[660px] h-[176px] flex flex-col gap-[15px] mt-[8px]">
                 {isLoading && (
                     <>
-                        {Array.from({ length: 3 }).map((_, idx) => (
-                            <div key={idx} className="w-[660px] h-[53px] rounded-[6px] bg-[#F5F5F5] animate-pulse" />
+                        {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="w-[660px] h-[53px] border border-[#F5F5F5] rounded-[6px] bg-[#F9FAFB] animate-pulse" />
                         ))}
                     </>
                 )}
 
-                {!isLoading && visibleTx.length === 0 && <div className="text-[12px] text-[#9CA3AF] flex items-center">No recent transactions.</div>}
-
                 {!isLoading &&
-                    visibleTx.map((tx) => (
+                    top3.map((tx) => (
                         <div key={tx.id} className="w-[660px] h-[53px] border border-[#F5F5F5] rounded-[6px] flex flex-col">
                             <div className="w-[633px] h-[40px] flex items-center justify-between mx-[13.5px] mt-[6px]">
-                                <div className="w-[230px] h-[40px] flex items-center gap-[14px]">
-                                    <img src={getTxIcon(tx)} className="w-[40px] h-[40px]" alt="tx icon" />
+                                <div className="w-[260px] h-[40px] flex items-center gap-[14px]">
+                                    <div className="w-[40px] h-[40px] rounded-[10px] bg-[#F3F4F6] flex items-center justify-center overflow-hidden">
+                                        <img src={tx.image} alt={tx.name} className="w-full h-full object-contain" />
+                                    </div>
+
                                     <div className="flex flex-col gap-[2px]">
                                         <span
                                             className="text-[14px]"
@@ -166,7 +156,7 @@ export const RecentTransactionsCard: React.FC = () => {
                                                 color: "#1B212D",
                                             }}
                                         >
-                                            {tx.description || "Transaction"}
+                                            {tx.name}
                                         </span>
                                         <span
                                             className="text-[12px]"
@@ -176,7 +166,7 @@ export const RecentTransactionsCard: React.FC = () => {
                                                 color: "#929EAE",
                                             }}
                                         >
-                                            {tx.currency || "TRY"}
+                                            {tx.business}
                                         </span>
                                     </div>
                                 </div>
@@ -184,26 +174,24 @@ export const RecentTransactionsCard: React.FC = () => {
                                 <span
                                     className="text-[14px]"
                                     style={{
-                                        width: 70,
-                                        height: 17,
+                                        width: 90,
                                         fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                                         fontWeight: 500,
                                         color: "#929EAE",
-                                        textAlign: "center" as const,
+                                        textAlign: "center",
                                     }}
                                 >
-                                    {tx.type === "income" ? "Income" : "Expense"}
+                                    {tx.type}
                                 </span>
 
                                 <span
                                     className="text-[14px]"
                                     style={{
-                                        width: 110,
-                                        height: 17,
+                                        width: 90,
                                         fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                                         fontWeight: 600,
-                                        color: tx.type === "income" ? "#16A34A" : "#1B212D",
-                                        textAlign: "center" as const,
+                                        color: getFlow(tx) === "income" ? "#16A34A" : "#1B212D",
+                                        textAlign: "center",
                                     }}
                                 >
                                     {formatAmount(tx)}
@@ -212,12 +200,11 @@ export const RecentTransactionsCard: React.FC = () => {
                                 <span
                                     className="text-[14px]"
                                     style={{
-                                        width: 90,
-                                        height: 17,
+                                        width: 100,
                                         fontFamily: '"Kumbh Sans", system-ui, sans-serif',
                                         fontWeight: 500,
                                         color: "#929EAE",
-                                        textAlign: "center" as const,
+                                        textAlign: "center",
                                     }}
                                 >
                                     {formatDate(tx.date)}
@@ -225,6 +212,8 @@ export const RecentTransactionsCard: React.FC = () => {
                             </div>
                         </div>
                     ))}
+
+                {!isLoading && top3.length === 0 && <div className="text-[12px] text-[#9CA3AF] mt-2">No recent transactions.</div>}
             </div>
         </div>
     );
